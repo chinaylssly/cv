@@ -1,0 +1,62 @@
+ffmpeg -i 02.mp4 -vcodec copy -an 02-out.mp4  //分离视频流
+
+ffmpeg -i 02.mp4 -acodec copy -vn 02-out.mp3 //分离音频流
+
+
+set SDL_AUDIODRIVER=directsound //解决播放视频没有声音的问题
+
+
+ss 放在 -i参数之前表示处理之前的文件
+
+2）剪切一段媒体文件，可以是音频或者视频文件：
+
+ffmpeg -i input.mp4 -ss 00:00:50.0 -codec copy -t 20 output.mp4
+表示将文件input.mp4从第50s开始剪切20s的时间，输出到文件output.mp4中，其中-ss指定偏移时间（time Offset），-t指定的时长（duration）。
+
+ffmpeg -i 02.mp4 -ow=640 -oh=480 -ss 00:00:50.0 -codec copy -t 30 02-cut.mp4
+
+10、把视频的图像批量输出（(-r 1)一秒钟保存一张，缩放为640*480，名称为foo-001.jpeg, foo-002.jpeg......）：
+
+
+ffmpeg -i h:\work\video.mp4 -r 1 -s 640x480 -f image2 d:\work\foo-%03d.jpeg
+
+还可以添加更多参数
+
+ffmpeg -i h:\work\video.mp4 -r 1 -ss 50 -vframes 3 -s 640x480 -f image2 d:\work\foo-%03d.jpeg
+
+
+
+12）将一个视频的画面部分生成图片，比如要分析一个视频里面的每一帧都是什么内容的时候，可能就需要用到这个命令了：
+
+ffmpeg -i output.mp4 -r 0.25 frames_%04d.png
+
+上述命令每4秒钟截取一帧视频画面生成一张图片，生成的图片从frames_0001.png开始一直递增下去。
+
+ffmpeg -i 02.mp4 -r 0.25 ff02/frames_%04d.png
+
+
+格式转换
+ffmpeg.exe -i 02.mp4 -s 640x360 -vcodec libx264  "02/out.mp4"
+
+
+
+ffmpeg -i c:/users/sunzhiming/desktop/02.mp4 -ss 00:00:50.0 -codec copy -t 20 "c:\users\sunzhiming\desktop\02fps.mp4"
+
+
+17、播放时自动检测视频周围的黑框（播放时，输出窗口可以看到检测出的crop），这个其实不是视频处理，只是播放效果：
+
+ffplay F:\迅雷下载\abc\bunnyjanjan.yummypura/JSQB9496.mp4 -vf crop=in_w/2:in_h/2:(in_w-out_w)/2+((in_w-out_w)/2)*sin(n/10):(in_h-out_h)/2+((in_h-out_h)/2)*sin(n/7)
+
+33、从视频里面截取几张图到一张图里（大图是2行3列）：
+
+ffmpeg  -i F:\迅雷下载\abc\bunnyjanjan.yummypura/JSQB9496.mp4  -frames 1  -vf "select=not(mod(n\,300)),scale=1280:720,tile=2x2" F:\迅雷下载\abc\bunnyjanjan.yummypura/ooo.png
+
+cmd=u'ffmpeg.exe -y -i "F:/迅雷下载/abc/bunnyjanjan.yummypura/JSQB9496.mp4"  -frames 1 -vf "transpose=1,select=not(mod(n\\,300)),scale=1280:720,tile=2x2" test.png'
+##视频需要翻转的情况
+
+
+##显示文件信息
+ffprobe -v quiet -print_format json -show_format -show_streams test.mp4
+
+##同时播放两个视频
+ffplay.exe -i "02.mp4" -vf "[in] scale=iw/2:ih/2, pad=iw:2*ih [top]; movie="xjp.mp4", scale=iw/2:ih/2 [bottom];[top][bottom] overlay=0:main_h/2 [out]" 
