@@ -31,14 +31,14 @@ class FFmpeg(object):
         self.show_video_info()
 
     def write_json_info(self,):
-        ##写入信息文件
+        '''写入信息文件'''
 
         cmd=u'ffprobe -v quiet -print_format json -show_format -show_streams "%s" >"%s"'%(self.path,self.info_file)
         self.execute(cmd,output=self.info_file)
 
     
     def read_info_from_json(self,):
-        ##读入视频信息
+        '''读入视频信息'''
 
         self.write_json_info()
         with open(self.info_file,'r')as f:
@@ -46,7 +46,7 @@ class FFmpeg(object):
 
 
     def show_video_info(self,):
-        ##显示视频信息
+        '''显示视频信息'''
 
         streams=self.info.get('streams')
         for stream in streams:
@@ -88,11 +88,13 @@ class FFmpeg(object):
 
     @classmethod
     def time(cls,m=0,s=0,ms=0,h=0):
+        '''时间格式转换'''
         return u'%d:%02d:%02d.%d'%(h,m,s,ms)
 
     @classmethod
     @timer
     def execute(cls,cmd,output=None):
+        '''执行函数'''
 
         if output is not None and os.path.exists(output):
             print u'filepath:%s exists'%(output)
@@ -110,7 +112,7 @@ class FFmpeg(object):
             sub.wait()
 
     def make_img_path(self,):
-        ##创建截图文件夹
+        '''创建截图文件夹'''
 
         img_root=u'%s/%s'%(self.root,self.name)
         if not os.path.exists(img_root):
@@ -120,7 +122,7 @@ class FFmpeg(object):
 
 
     def cut_img(self,time=30):
-        ##依照时间间隔对视频进行截图
+        '''依照时间间隔对视频进行截图'''
 
         self.make_img_path()
         print u'ready cut img from %s'%(self.path)
@@ -130,7 +132,7 @@ class FFmpeg(object):
         self.execute(cmd,output)
 
     def cut_img_long(self,width=1280,height=720,step=1000,x=2,y=3):
-        ##长截图，x为行的图片数，y为列图片数,step表示帧数（每1000帧截图一张）
+        '''长截图，x为行的图片数，y为列图片数,step表示帧数（每1000帧截图一张）'''
 
         output=u'%s/%s-long(%sx%s).png'%(self.root,self.name,x,y)
         print u'ready cut long img from %s'%(self.path)
@@ -143,7 +145,7 @@ class FFmpeg(object):
 
 
     def cut(self,start='00:00:00.0',end='00:01:30.0'):
-        ##剪裁视频
+        '''剪裁视频'''
 
         output=u'%s/%s-cut-%02d.%s'%(self.root,self.name,self.cutno,self.attr)
         print u'cut filepath at: %s'%(output)
@@ -155,8 +157,10 @@ class FFmpeg(object):
 
       
     def convert(self,width=1280,height=720,vcodec='libx264',b=None):
-        ##vcodec='copy'时，分辨率就失效了
-        ##b最好设置为默认
+        '''
+        vcodec='copy'时，分辨率就失效了
+        b最好设置为默认
+        '''
 
         if b is None:
             fb=0
@@ -175,7 +179,9 @@ class FFmpeg(object):
         return output
 
     def convert_more(self,width=1280,height=720,vcodec='libx264',preset='faster',crf=23):
-        ##更快速的转码方法
+        '''
+        更快速的转码方法
+        '''
 
         output='%s/%s(%dx%d)-(%s-%s-%s).%s'%(self.root,self.name,width,height,vcodec,preset,crf,self.attr)
         cmd='ffmpeg.exe -i "%s" -s %dx%d  -vcodec %s -preset %s -crf %d "%s"'%(self.path,width,height,vcodec,preset,crf,output)
@@ -183,7 +189,10 @@ class FFmpeg(object):
         return cost
 
     def convert_sp(self,):
-        ##处理带有ratate的视频
+        '''
+        处理带有ratate的视频
+
+        '''
 
         output=u'%s/%s_t2.%s'%(self.root,self.name,self.attr)
         cmd=u'ffmpeg.exe -y -i "%s" -vf transpose=2 -vcodec libx264 "%s"'\
@@ -197,7 +206,10 @@ class FFmpeg(object):
 
 
     def play(self,start=u'0:00:30.0',):
-        ##播放视频,最好在命令行直接执行
+        '''
+        播放视频,最好在命令行直接执行
+
+        '''
 
         ##set SDL_AUDIODRIVER=directsound && ffplay.exe
         cmd=u'ffplay.exe -ss %s %s'%(start,self.path,)
@@ -207,7 +219,9 @@ class FFmpeg(object):
 
     @classmethod
     def combine_lr(cls,left=u'02.mp4',right=u'xjp.mp4',output=u'combine_lr.mp4'):
-        ##两个文件左右合并（无敌了)
+        '''
+        两个文件左右合并（无敌了)
+        '''
 
         cmd=u'ffmpeg.exe -i "%s" -vf "[in] scale=iw/2:ih/2, pad=2*iw:ih [left]; movie="%s", scale=iw/2:ih/2 [right];[left][right] overlay=main_w/2:0 [out]" %s'\
             %(left,right,output)
@@ -216,16 +230,32 @@ class FFmpeg(object):
 
     @classmethod
     def combine_four(cls,v1,v2,v3,v4,output=u'combine_four.mp4'):
-        ##四路视频合并为1路
+        '''
+        四路视频合并为1路
+        '''
         
         cmd=u'ffmpeg.exe -i %s -i %s -i %s -i %s -filter_complex "[0:v]pad=iw*2:ih*2[a];[a][1:v]overlay=w[b];[b][2:v]overlay=0:h[c];[c][3:v]overlay=w:h" %s'\
             %(v1,v2,v3,v4,output)
 
         cls.execute(cmd=cmd,output=output)
 
+
+    @classmethod
+    def play_four(cls,v1=u'02.mp4',v2=u'02.mp4',v3=u'02.mp4',v4=u'02.mp4',):
+        '''
+        同时播放四路视频
+        '''
+
+        cmd=u'ffplay.exe -i "%s" -vf "scale=iw/2:ih/2, pad=iw*2:2*ih [v1]; movie="%s", scale=iw/2:ih/2 [v2];[v1][v2] overlay=main_w/2:0[out1] ;movie="%s",scale=iw/2:ih/2 [v3];[out1][v3] overlay=0:main_h/2 [out2]; movie="%s",scale=iw/2:ih/2 [v4]; [out2][v4] overlay=main_w/2:main_h/2 [out]"'\
+                %(v1,v2,v3,v4)
+
+        cls.execute(cmd)
+
     @classmethod
     def play_tb(cls,top=u'02.mp4',buttom=u'xjp.mp4'):
-        ##两个文件上下合并（无敌了）
+        '''
+          两个文件上下合并（无敌了）
+        '''
 
         cmd=u'ffplay.exe -i "%s" -vf "[in] scale=iw/2:ih/2, pad=iw:2*ih [top]; movie="%s", scale=iw/2:ih/2 [bottom];[top][bottom] overlay=0:main_h/2 [out]"'\
             %(top,buttom)
@@ -234,7 +264,9 @@ class FFmpeg(object):
 
     @classmethod
     def play_in(cls,big=u'02.mp4',small=u'xjp.mp4'):
-        ##文件重叠合并，把第二个文件的视频缩小为四分之一后，放到第一个视频的宽高八分之一画面处（更无敌）
+        '''
+          文件重叠合并，把第二个文件的视频缩小为四分之一后，放到第一个视频的宽高八分之一画面处（更无敌）
+        '''
 
 
         cmd='ffplay.exe -i "%s" -vf "[in] scale=iw:ih, pad=iw:ih [top];movie="%s", scale=iw/4:ih/4 [bottom];[top][bottom] overlay=main_w*5/8:main_h/8 [out]"'\
@@ -246,6 +278,7 @@ class FFmpeg(object):
 
 
     def test(self,width,height,vcodec='libx264',b=None,t=30):
+          
 
         start=self.time(m=1,s=0)
         end=self.time(m=1,s=t)
@@ -313,5 +346,5 @@ if __name__ =='__main__':
     # test_cut_img()
     # test_play()
     # FFmpeg()
-    FFmpeg().cut_img()
+    # FFmpeg().cut_img()
     pass

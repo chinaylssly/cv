@@ -28,7 +28,9 @@ class CV(object):
 
 
     def init_cap(self,):
-        ##初始化capture
+        '''
+        初始化capture
+        '''
 
         if os.path.exists(self.path):
             self.cv2=cv2
@@ -37,7 +39,9 @@ class CV(object):
             raise
 
     def get_frame_by_num(self,num,):
-        ##获取对应帧数的帧内容
+        '''
+        根据帧数获取frame
+        '''
 
         self.cap.set(cv2.CAP_PROP_POS_FRAMES,num)  #设置要获取的帧号
         ret,frame=self.cap.read()  #read方法返回一个布尔值和一个视频帧。若帧读取成功，则返回True
@@ -45,45 +49,83 @@ class CV(object):
 
 
     def show_frame(self,frame,wait=1000,title='frame'):
-        ##显示帧画面
-
+        '''
+        显示帧画面
+        '''
         cv2.imshow(title, frame)
         cv2.waitKey(wait)
 
+    @classmethod
+    def add_text(self,img=None,text=u'message at here'):
+        '''
+        为图片增加文字
+        '''
+
+        cv2.putText(img, text, (40, 50), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 255), 1)
+        ##(40,50)添加位置
+        ##1.0字体大小
+        ##（0,0,255）字体颜色
+        ##1 字体粗度
+
+
+
+
     def show_multi_frame(self,width=1280,height=720,t=30,wait=60,title='frame'):
-        ##相当于快进播放frame
+        '''
+        间隔30s播放一帧画面
+
+        params: width,窗口宽度
+        params: height,窗口高度
+        params: t,时间间隔
+        params: wait,窗口刷新时间
+        params: title,窗口标题
+        '''
 
         cv2.namedWindow(title,0)
         cv2.resizeWindow(title, width, height)
+        ##设置窗口大小
+
         step=int(self.fps * t)
         for num in range(0,int(self.framenums),step):
-            self.show_frame_by_num(num=num,wait=wait)
+            
+            frame=self.get_frame_by_num(num=num)
+            text=u'frame:%d'%(num)
+            self.add_text(img=frame,text=text)
+            self.show_frame(frame=frame,wait=wait)
             
 
     def show_frame_by_num(self,num=50,wait=1500):
-        ##显示指定帧
+        '''
+        显示指定帧
+        '''
 
         frame=self.get_frame_by_num(num=num)
         self.show_frame(frame=frame,wait=wait)
         
 
     def get_frame_num_by_timepoint(self,timepoint=1):
-        ##timepoint单位为秒
+        '''
+        获取指定时间的帧数（编号）
+        timepoint单位为秒
+        '''
 
         framenum=self.framerawrate * timepoint
         return int(framenum)
 
 
     def get_timepoint_by_frame_num(self,framenum):
-        ##根据帧所在的时间点
-
+        '''
+        根据帧数获取帧所在的时间点
+        '''
         timepoint=framenum / self.framerawrate
         return timepoint
 
 
 
     def show_video_info(self,):
-        ##显示视频信息
+        '''
+        显示视频信息
+        '''
 
         self.width=self.cap.get(3)
         self.height=self.cap.get(4)
@@ -105,7 +147,9 @@ class CV(object):
 
 
     def make_img_path(self,):
-        ##创建截图文件夹
+        '''
+        创建截图文件夹
+        '''
 
         self.imgno=0
         img_root=u'%s/%s'%(self.root,self.name)
@@ -116,7 +160,9 @@ class CV(object):
 
 
     def is_done(self,):
-        ##判断视频是否已截过图
+        '''
+        判断视频是否已截过图
+        '''
 
         done_file=u'%s/done'%(self.img_root)
 
@@ -127,7 +173,9 @@ class CV(object):
 
 
     def wrtie_frame_to_img(self,frame):
-        ##将指定帧写入图片
+        '''
+        将指定帧写入图片
+        '''
 
         img_path=u'%s/%03d.jpg'%(self.img_root,self.imgno)
         cv2.imencode('.jpg',frame)[1].tofile(img_path)
@@ -137,7 +185,9 @@ class CV(object):
 
 
     def remove_imgs(self,):
-        ##删除截图文件
+        '''
+        删除截图文件
+        '''
 
         imgs=os.listdir(self.img_root)
 
@@ -158,7 +208,9 @@ class CV(object):
 
 
     def remove_empty_folder(self,):
-        ##删除空的截图文件夹
+        '''
+        删除空的截图文件夹
+        '''
 
         imgs=os.listdir(self.img_root)
 
@@ -168,9 +220,10 @@ class CV(object):
 
 
 
-
     def get_full_screen_cut(self,step=20):
-        ##按时间间隔给视频截图
+        '''
+        按时间间隔给视频截图
+        '''
 
         self.make_img_path()
 
@@ -201,7 +254,9 @@ class CV(object):
 
 
     def get_range_by_time(self,start_time=0,end_time=-1,):
-        ##根据时间获取截取视频的开始以及结束帧数
+        '''
+        根据时间获取截取视频的开始已经结束帧数
+        '''
        
         if end_time >= self.totaltime or end_time ==-1:
             end_time=self.totaltime
@@ -219,7 +274,9 @@ class CV(object):
 
 
     def jump_play_by_time(self,start_time=0,end_time=-1,wait=None):
-        ##按照时间播放视频
+        '''
+        按照时间播放视频
+        '''
        
         point,end = self.get_range_by_time(start_time=start_time,end_time=end_time)
         print u'play %s by timeline,start at %s second,end at %s second!!'%(self.filename,start_time,end_time)
@@ -228,7 +285,9 @@ class CV(object):
 
     @timer
     def jump_play_by_frame(self,point=0,end=-1,wait=None):
-        ##按照帧数播放视频
+        '''
+        按照帧数播放视频
+        '''
 
         if wait is None:
             wait=self.wait
@@ -258,7 +317,9 @@ class CV(object):
     
     @timer
     def show_all_frame(self,wait=25):
-        ##播放视频
+        '''
+        播放视频
+        '''
 
         while(self.cap.isOpened()):
           # Capture frame-by-frame
@@ -278,7 +339,9 @@ class CV(object):
             break
 
     def convert_video(self,fps=None,width=None,height=None,start_time=0,end_time=-1,name=None,attr=None):
-
+        '''
+        本函数不能使用，转码请使用，ffmpeg（需要重新编译opencv，使用mpeg编码器)
+        '''
         if fps is None:
             fps=int(self.framerawrate)
 
@@ -294,13 +357,12 @@ class CV(object):
 
         size=(width,height)
 
-        attr='avi'
         
         filename=u'%s/%s-(%d*%d)-(%dfps).%s'%(self.root,name,width,height,fps,attr)
         print u'ready convert video:%s to %s'%(self.path,filename)
         # videoWriter =cv2.VideoWriter(filename,cv2.VideoWriter_fourcc('X','V','I','D'),fps,size)
-        fourcc = cv2.VideoWriter_fourcc(*'X264')
-        videoWriter = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
+        fourcc = cv2.VideoWriter_fourcc(*'AVC1')
+        videoWriter = cv2.VideoWriter(filename,fourcc, fps, (width,height))
 
 
         point,end =self.get_range_by_time(start_time=start_time,end_time=end_time)
@@ -330,7 +392,18 @@ class CV(object):
 
 
 
+    @classmethod
+    def show_profile(cls,path=u'../result-p(2).png'):
+        '''
+        显示图片轮廓
+        '''
 
+        frame=cv2.imread(path)
+        frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        frame=cv2.blur(frame, (7,7))
+        frame=cv2.Canny(frame,0,30,3)
+        cv2.imshow("Pick Picture:",frame)
+        a=cv2.waitKey(0)
 
 
     def close(self,):
@@ -342,17 +415,6 @@ class CV(object):
         cv2.destroyAllWindows()
 
         print u'release the video capture object'
-
-    @classmethod
-    def show_lunkuo(cls,path=u'../result-p(2).png'):
-        ##显示图片轮廓
-
-        frame=cv2.imread(path)
-        frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-        frame=cv2.blur(frame, (7,7))
-        frame=cv2.Canny(frame,0,30,3)
-        cv2.imshow("Pick Picture:",frame)
-        a=cv2.waitKey(0)
 
 
     def test_play(self,):
@@ -369,9 +431,6 @@ class CV(object):
         self.get_full_screen_cut()
 
 
-
-
-
         
 
 if __name__ == '__main__':
@@ -380,7 +439,11 @@ if __name__ == '__main__':
     cv=CV(path)
     # cv.test_img()
     # cv.test_play()   
-    cv.convert_video(start_time=10,end_time=30)
+    # cv.show_all_frame()
+    # cv.jump_play_by_time(60,120)
+    # cv.jump_play_by_frame(100,300)
+    cv.show_multi_frame(wait=1000)
+
     cv.close()
 
   
