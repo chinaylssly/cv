@@ -406,6 +406,45 @@ class CV(object):
         a=cv2.waitKey(0)
 
 
+    @classmethod
+    def camera(self,width=640,height=480,fps=20,folder='.',filename=u'camera'):
+
+        '''
+        摄像头录制
+        '''
+
+        cap = cv2.VideoCapture(0)
+        # Define the codec and create VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        filepath=u'%s/%s.avi'%(folder,filename)
+        out = cv2.VideoWriter(filepath,fourcc, fps, (width,height))
+
+        print u'视频保存位置：%s'%(filepath)
+        print u'输入q退出视频录制......'
+
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if ret==True:
+
+                # frame = cv2.flip(frame,0)
+                ##会导致上下翻转
+
+                # write the flipped frame
+                out.write(frame)
+
+                cv2.imshow('frame',frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            else:
+                print u'%s 保存成功'%(filepath)
+                break
+
+        # Release everything if job is finished
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
+
     def close(self,):
 
         # When everything done, release the video capture object
