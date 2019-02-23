@@ -181,7 +181,7 @@ class FFmpeg(object):
 
         duration=timetuple_to_second(end) - timetuple_to_second(start)
 
-        startdict=dict(zip(('m','h','s','ms'),start))
+        startdict=dict(zip(('h','m','s','ms'),start))
         startstring=cls.time(**startdict)
 
         return startstring,duration
