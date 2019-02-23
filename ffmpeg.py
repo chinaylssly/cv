@@ -143,9 +143,8 @@ class FFmpeg(object):
         self.execute(cmd,output)
 
 
-
     def cut(self,start='00:00:00.0',end='00:01:30.0'):
-        '''剪裁视频'''
+        '''剪裁视频，次函数不建议使用，除非start不大'''
 
         output=u'%s/%s-cut-%02d.%s'%(self.root,self.name,self.cutno,self.attr)
         print u'cut filepath at: %s'%(output)
@@ -154,6 +153,73 @@ class FFmpeg(object):
         self.cutno+=1
 
         return output
+
+    @classmethod
+    def compute_time(cls,start=(0,0,0,0),end=(0,1,0,0)):
+
+        def convert_timetuple(timetuple):
+
+            if len(timetuple)==3:
+                h,m,s = timetuple
+                ms=0
+            elif len(timetuple)==4:
+                h,m,s,ms = timetuple
+            else:
+                raise IndexError(u'lenght of timetuple must be 3 or 4 ')
+
+            return h,m,s,ms
+
+        start = convert_timetuple(start)
+        end =convert_timetuple(end)
+
+        def timetuple_to_second(timetuple):
+            h,m,s,ms=timetuple
+            return h * 3600 + m * 60 + s + ms / 1000.0 
+
+        duration=timetuple_to_second(end) - timetuple_to_second(start)
+
+        startdict=dict(zip(('m','h','s','ms'),start))
+        startstring=cls.time(**startdict)
+
+        return startstring,duration
+
+
+    def cut_video(self,start=(0,0,0,0),end=(0,1,0,0)):
+        '''
+        裁剪视频，针对start很大的时，更快的裁剪速度
+        params: srart,end 开始和结束时间，接收至少三个元素的可迭代对象，分别代表hour，minute，second，如果有第四个元素，则代表millisecond
+        '''
+
+        startstring,duration = self.compute_time(start,end)
+
+        output=u'%s/%s-cut-%02d.%s'%(self.root,self.name,self.cutno,self.attr)
+        print u'cut filepath at: %s'%(output)
+        cmd=u'ffmpeg.exe -ss %s -i "%s"  -codec copy -t %s "%s"'%(startstring,self.path,duration,output)
+        self.execute(cmd,output)
+        self.cutno+=1
+        return output
+
+
+
+    def cut_video_advance(self,width=1280,height=720,vcodec='libx264',preset='faster',crf=23,durationtuple=None):
+        '''
+        可剪辑视频切可转码
+        params: durationtuple=((0,0,1),(0,0,8))接收开始时间和结束时间
+        '''
+
+        if durationtuple:
+            start,end=durationtuple
+            startstring,duration = self.compute_time(start,end)
+            durationstring=u'-ss %s -t %s'%(self.compute_time(start,end))
+
+        else:
+
+            durationstring=u''
+
+        output='%s/%s(%dx%d)-(%s-%s-%s).%s'%(self.root,self.name,width,height,vcodec,preset,crf,self.attr)
+        cmd='ffmpeg.exe %s -i "%s" -s %dx%d  -vcodec %s -preset %s -crf %d "%s"'%(durationstring,self.path,width,height,vcodec,preset,crf,output)
+        cost=self.execute(cmd=cmd,output=output)
+        return cost
 
       
     def convert(self,width=1280,height=720,vcodec='libx264',b=None):
@@ -187,6 +253,8 @@ class FFmpeg(object):
         cmd='ffmpeg.exe -i "%s" -s %dx%d  -vcodec %s -preset %s -crf %d "%s"'%(self.path,width,height,vcodec,preset,crf,output)
         cost=self.execute(cmd=cmd,output=output)
         return cost
+
+ 
 
     def convert_sp(self,):
         '''
@@ -274,9 +342,6 @@ class FFmpeg(object):
         cls.execute(cmd)
 
 
-
-
-
     def test(self,width,height,vcodec='libx264',b=None,t=30):
           
 
@@ -294,10 +359,6 @@ class FFmpeg(object):
             print u'catch exception when convert file:%s'%(self.path)
             print format_exc()
             raise
-
-
-
-
 
 
 
@@ -324,6 +385,23 @@ def test_cut():
     ffmpeg.cut(start,end)
 
 
+def test_cut_video():
+
+    path=u'02.mp4'
+    ffmpeg=FFmpeg(path)
+    ffmpeg.cut_video(start=(0,0,1),end=(0,0,8))
+
+
+def test_cut_video_advance():
+
+    path=u'02.mp4'
+    ffmpeg=FFmpeg(path)
+    from tools import PPI,speed
+    width,height =PPI[-2]
+    ffmpeg.cut_video_advance(width=width,height=height,durationtuple=((0,0,1),(0,0,8)))
+    ffmpeg.cut_video_advance(width=width,height=height,preset=speed[1][1])
+
+
 def test_convert():
 
     print FFmpeg.time()
@@ -332,7 +410,6 @@ def test_convert():
 
 
 def test_info():
-
     ffmpeg=FFmpeg()
     print ffmpeg.info
 
@@ -347,4 +424,6 @@ if __name__ =='__main__':
     # test_play()
     # FFmpeg()
     # FFmpeg().cut_img()
+    # test_cut_video()
+    # test_cut_video_advance()
     pass
