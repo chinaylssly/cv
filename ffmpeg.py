@@ -144,7 +144,7 @@ class FFmpeg(object):
 
 
     def cut(self,start='00:00:00.0',end='00:01:30.0'):
-        '''剪裁视频，次函数不建议使用，除非start不大'''
+        '''剪裁视频，此函数不建议使用，除非start开始时间不大，建议使用cut_video函数'''
 
         output=u'%s/%s-cut-%02d.%s'%(self.root,self.name,self.cutno,self.attr)
         print u'cut filepath at: %s'%(output)
@@ -156,6 +156,9 @@ class FFmpeg(object):
 
     @classmethod
     def compute_time(cls,start=(0,0,0,0),end=(0,1,0,0)):
+        '''
+        处理与时间相关计算，比如时间间隔等
+        '''
 
         def convert_timetuple(timetuple):
 
