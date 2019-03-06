@@ -27,8 +27,8 @@ class FFmpeg(object):
         self.cutno=0
         self.info_file=u'%s/%s.json'%(self.root,self.name)
 
-        self.read_info_from_json()
-        self.show_video_info()
+        # self.read_info_from_json()
+        # self.show_video_info()
 
     def write_json_info(self,):
         '''写入信息文件'''
@@ -60,7 +60,10 @@ class FFmpeg(object):
                 self.bit_rate =stream.get('bit_rate') #视频的比特率
                 self.nb_frames =stream.get('nb_frames') ##视频帧数
                 self.tags =stream.get('tags') ##流中的附加信息，其中的字段可能为空
-                self.rotate=self.tags.get('rotate')
+                try:
+                    self.rotate=self.tags.get('rotate')
+                except:
+                    self.rotate=None
                 
                 break
 
@@ -144,7 +147,7 @@ class FFmpeg(object):
 
 
     def cut(self,start='00:00:00.0',end='00:01:30.0'):
-        '''剪裁视频，此函数不建议使用，除非start开始时间不大，建议使用cut_video函数'''
+        '''剪裁视频，次函数不建议使用，除非start不大'''
 
         output=u'%s/%s-cut-%02d.%s'%(self.root,self.name,self.cutno,self.attr)
         print u'cut filepath at: %s'%(output)
@@ -156,9 +159,6 @@ class FFmpeg(object):
 
     @classmethod
     def compute_time(cls,start=(0,0,0,0),end=(0,1,0,0)):
-        '''
-        处理与时间相关计算，比如时间间隔等
-        '''
 
         def convert_timetuple(timetuple):
 
@@ -204,10 +204,11 @@ class FFmpeg(object):
 
 
 
-    def cut_video_advance(self,width=1280,height=720,vcodec='libx264',preset='faster',crf=23,durationtuple=None):
+    def cut_video_advance(self,width=1280,height=720,vcodec='libx264',preset='faster',crf=23,durationtuple=None,output=None):
         '''
         可剪辑视频切可转码
         params: durationtuple=((0,0,1),(0,0,8))接收开始时间和结束时间
+        params: output可以自定义输出文件名，以后扩展用
         '''
 
         if durationtuple:
@@ -256,6 +257,7 @@ class FFmpeg(object):
         cmd='ffmpeg.exe -i "%s" -s %dx%d  -vcodec %s -preset %s -crf %d "%s"'%(self.path,width,height,vcodec,preset,crf,output)
         cost=self.execute(cmd=cmd,output=output)
         return cost
+
 
  
 
@@ -428,5 +430,5 @@ if __name__ =='__main__':
     # FFmpeg()
     # FFmpeg().cut_img()
     # test_cut_video()
-    # test_cut_video_advance()
+    test_cut_video_advance()
     pass
